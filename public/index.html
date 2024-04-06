@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+  <head>
+  	<title>Final Project</title>
+    <script src="socket.io/socket.io.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="final.css">
+  </head>
+  <body>
+    <div class="row">
+      
+      <div class="column1">
+        <div id="choose_color">Choose up to 10 colors</div>
+        <div class="slidecontainer">
+          <input type="range" id="numColors" min="1" max="10" value="1" class="slider">
+        </div>
+        <div>
+          <input type="color" id="color_1" value="#000000">
+          <br></br>
+          <label for="input_factor">Sampling Factor</label>
+          <input type="number" id="input_factor" name="factor" min="1" max="50">
+          <input type="file" id="file-selector" accept=".jpg, .jpeg, .png" value="Upload Profile Pic">
+          <br></br>
+          <canvas id="inputPhoto" width="200" height="200"></canvas>
+          <input type="button" id="processButton" value="process" onclick="process()"/>
+          <br></br>
+          <canvas id="outputPhoto" width="200" height="200"></canvas>
+          <br id="end"></br>
+        </div>
+      </div>
+
+      <div class="column2">
+        <div class="column2z">
+  
+        </div>
+        <div class="column2a">
+          <div id="g1"></div>
+          <div id="g4"></div>
+        </div>
+        <div class="column2b">
+          <div id="g2"></div>
+          <div id="g5"></div>
+        </div>
+        <div class="column2c">
+          <div id="g3"></div>
+          <div id="g6"></div>
+        </div>
+      </div>
+    
+    </div>
+    <script>
+
+      function loadJS(FILE_URL) {
+        let scriptEle = document.createElement("script");
+
+        scriptEle.setAttribute("src", FILE_URL);
+
+        document.body.appendChild(scriptEle);
+
+        // success event 
+        scriptEle.addEventListener("load", () => {
+          console.log("File loaded")
+        });
+        // error event
+        scriptEle.addEventListener("error", (ev) => {
+          console.log("Error on loading file", ev);
+        });
+      }
+
+      var socket = io.connect();
+
+      // COLOR SELECTION SECTION
+
+      var color_arr = ['#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#000000', '#000000'];
+
+      function clearColors(){
+        try {document.getElementById("color_2").remove();}catch(err){}
+        try {document.getElementById("color_3").remove();}catch(err){}
+        try {document.getElementById("color_4").remove();}catch(err){}
+        try {document.getElementById("color_5").remove();}catch(err){}
+        try {document.getElementById("color_6").remove();}catch(err){}
+        try {document.getElementById("color_7").remove();}catch(err){}
+        try {document.getElementById("color_8").remove();}catch(err){}
+        try {document.getElementById("color_9").remove();}catch(err){}
+        try {document.getElementById("color_10").remove();}catch(err){}
+      }
+
+      var slider = document.getElementById("numColors");
+
+      slider.oninput = function() {
+        saveColors();
+        clearColors();
+        if (slider.value >= 2){
+          document.getElementById("color_1").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_2\">");
+          document.getElementById("color_2").value=color_arr[1];
+        }
+        if (slider.value >= 3){
+          document.getElementById("color_2").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_3\">");
+          document.getElementById("color_3").value=color_arr[2];
+        }
+        if (slider.value >= 4){
+          document.getElementById("color_3").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_4\">");
+          document.getElementById("color_4").value=color_arr[3];
+        }
+        if (slider.value >= 5){
+          document.getElementById("color_4").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_5\">");
+          document.getElementById("color_5").value=color_arr[4];
+        }
+        if (slider.value >= 6){
+          document.getElementById("color_5").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_6\">");
+          document.getElementById("color_6").value=color_arr[5];
+        }
+        if (slider.value >= 7){
+          document.getElementById("color_6").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_7\">");
+          document.getElementById("color_7").value=color_arr[6];
+        }
+        if (slider.value >= 8){
+          document.getElementById("color_7").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_8\">");
+          document.getElementById("color_8").value=color_arr[7];
+        }
+        if (slider.value >= 9){
+          document.getElementById("color_8").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_9\" onclick=\"saveColors()\">");
+          document.getElementById("color_9").value=color_arr[8];
+        }
+        if (slider.value >= 10){
+          document.getElementById("color_9").insertAdjacentHTML("afterEnd",
+            "<input type=\"color\" id=\"color_10\">");
+          document.getElementById("color_10").value=color_arr[9];
+        }
+      }
+
+      function saveColors(){
+        try{color_arr[0] = document.getElementById("color_1").value;}catch(err){}
+        try{color_arr[1] = document.getElementById("color_2").value;}catch(err){}
+        try{color_arr[2] = document.getElementById("color_3").value;}catch(err){}
+        try{color_arr[3] = document.getElementById("color_4").value;}catch(err){}
+        try{color_arr[4] = document.getElementById("color_5").value;}catch(err){}
+        try{color_arr[5] = document.getElementById("color_6").value;}catch(err){}
+        try{color_arr[6] = document.getElementById("color_7").value;}catch(err){}
+        try{color_arr[7] = document.getElementById("color_8").value;}catch(err){}
+        try{color_arr[8] = document.getElementById("color_9").value;}catch(err){}
+        try{color_arr[9] = document.getElementById("color_10").value;}catch(err){}
+      }
+
+      // PHOTO SELECTION SECTION
+
+      const fileSelector = document.getElementById('file-selector');
+      fileSelector.addEventListener('change', (event) => {
+        myfiles = event.target.files;
+        socket.emit('sendinputpic', myfiles[0], myfiles[0].name);
+        console.log("selected:" + myfiles[0]);
+      });
+
+      socket.on('drawinputimage', function(data) {
+        var varimg = new Image();
+        varimg.onload = drawInputImage;
+        varimg.src = "./images/" + data;
+      });
+
+      function drawInputImage() {
+        var canvasSetupP = document.getElementById("inputPhoto");
+        var ctxP = canvasSetupP.getContext("2d");
+        ctxP.clearRect(0, 0, canvasSetupP.width, canvasSetupP.height);
+        if (this.height > this.width){var factor = Math.ceil(this.height/200);
+        console.log(this.height);}
+        else{var factor = Math.ceil(this.width/200);}
+        var h = this.height / factor
+        var w = this.width / factor
+        console.log(factor);
+        console.log(h);
+        console.log(w);
+        ctxP.drawImage(this, 0, 0, this.width, this.height, 0, 0, w, h);
+      }
+      
+      function process(){
+        saveColors();
+        console.log(color_arr.slice(0, slider.value));
+        var factor = document.getElementById("input_factor");
+        if(factor.value == ""){fval = 1;}
+        else{fval = factor.value}
+        socket.emit("process", color_arr.slice(0, slider.value), fval);
+        alert("Please do not press process again until you get an output image. It could take a while to run kmeans.")
+        var canvasSetupP = document.getElementById("outputPhoto");
+        var ctxP = canvasSetupP.getContext("2d");
+        ctxP.clearRect(0, 0, canvasSetupP.width, canvasSetupP.height);
+        try {document.getElementById("download_output").remove();}catch(err){}
+        try {document.getElementById("load").remove();}catch(err){}
+      }
+
+      socket.on('drawoutputimage', function(data) {
+        var varimg = new Image();
+        varimg.onload = drawOutputImage;
+        varimg.src = "./editedimages/" + data + "?cache=none";
+
+        document.getElementById("outputPhoto").insertAdjacentHTML("afterEnd",
+        "<a id=\"download_output\" href=\"/editedimages/" + data +"\" download=\"" + data + "\"> <input type=\"button\" id=\"downloadButton\" value=\"download\"/></a>");
+        
+      });
+
+      function drawOutputImage() {
+        var canvasSetupP = document.getElementById("outputPhoto");
+        var ctxP = canvasSetupP.getContext("2d");
+        if (this.height > this.width){var factor = Math.ceil(this.height/200);
+        console.log(this.height);}
+        else{var factor = Math.ceil(this.width/200);}
+        var h = this.height / factor
+        var w = this.width / factor
+        console.log(factor);
+        console.log(h);
+        console.log(w);
+        ctxP.drawImage(this, 0, 0, this.width, this.height, 0, 0, w, h);
+        loadJS("./data.js?cache=none");
+        document.getElementById("end").insertAdjacentHTML("afterEnd",
+        "<input type=\"button\" id=\"load\" value=\"graph it!\" onclick=\"load_graph()\"/>");
+
+      }
+
+      function load_graph() {
+        loadJS("./graph.js");
+      }
+      
+      
+    </script>
+  </body>
+</html>

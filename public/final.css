@@ -1,0 +1,57 @@
+.column1 {
+    float: left;
+    width: 220px;
+}
+.column2 {
+    float: left;
+}
+.column2z{
+    float: left;
+    width: 20px;
+}
+.column2a {
+    float: left;
+    width: 260px;
+}
+.column2b {
+    float: left;
+    width: 340px;
+}
+.column2c {
+    float: left;
+    width: 340px;
+}
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+input[type="color"] {
+	border: none;
+	width: 20px;
+	height: 20px;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+	border: none;
+}
+input[type="range"] {
+    width: 200px;
+}
+body {
+    background-color: #EDEDED;
+}
+h3 {
+    text-align: center;
+    transform-origin: 0 00;
+    transform: rotate(270deg);
+    padding: 0px 0px;
+    margin: 200px 0 0px 0;
+}
+h2 {
+    text-align: center;
+    padding: 0px 0px;
+    margin: 200px 0 0px 0;
+}
